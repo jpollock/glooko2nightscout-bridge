@@ -24,6 +24,7 @@ var request = require('request');
 var qs = require('querystring');
 var crypto = require('crypto');
 var PubNub = require('pubnub');
+var moment = require('moment-timezone');
 
 // Defaults
 var server = "api.glooko.com"
@@ -218,18 +219,17 @@ function engine (opts) {
       
       var now = Date.now();
       var then = new Date(now - 180*60000)
+      console.log(then);
       //var fetch_opts = Object.create(opts.fetch);
       fetch_opts.lastUpdatedAt = then.toISOString();
 
-      fetch(fetch_opts, function (err, res, glucose) {
-        console.log(res.statusCode);
-        if (res.statusCode < 400) {
-          to_nightscout(glucose);
-          to_pubnub(glucose);
-        } else {
-          my.sessionID = null;
-          refresh_token( );
-        }
+      var arr = {};
+      fetch(Defaults.LatestFoods, fetch_opts, function (err, res, foods) {
+        fetch(Defaults.LatestInsulins, fetch_opts, function (err, res, insulins) {
+          arr['foods'] = foods;
+          arr['insulins'] = insulins;
+          to_nightscout(arr);
+        });
       });
     } else {
       failures++;
@@ -254,24 +254,21 @@ function engine (opts) {
     });
   }
 
-  function to_nightscout (glucose) {
+  function to_nightscout (entries) {
     var ns_config = Object.create(opts.nightscout);
-    if (glucose) {
-      runs++;
-      // Translate to Nightscout data.
-      var entries = glucose.map(dex_to_entry);
-      console.log('Entries', entries);
-      if (opts && opts.callback && opts.callback.call) {
-        opts.callback(null, entries);
-      }
-      if (ns_config.endpoint) {
-        ns_config.entries = entries;
-        // Send data to Nightscout.
-        report_to_nightscout(ns_config, function (err, response, body) {
-          console.log("Nightscout upload", 'error', err, 'status', response.statusCode, body);
+    if (entries) {
+      generate_nightscout_treatments(entries, function(err, treatments) {
+        //var entries = glucose.map(dex_to_entry);
+        //console.log(ns_config);
+        if (ns_config.endpoint) {
+          ns_config.treatments = treatments;
+          // Send data to Nightscout.
+         report_to_nightscout(ns_config, function (err, response, body) {
+            console.log("Nightscout upload", 'error', err, 'status', response.statusCode, body);
 
-        });
-      }
+          });
+        }
+      });          
     }
   }
 
