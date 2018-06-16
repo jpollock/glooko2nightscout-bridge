@@ -1,0 +1,29 @@
+{
+  "name": "glooko2nightscout-bridge",
+  "version": "0.0.1",
+  "description": "Fetches data from Glooko's webservice and puts it in Nightscout. This code is heavily based on bewest's https://github.com/nightscout/share2nightscout-bridge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jeremy Pollock",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.87.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jpollock/glooko2nightscout-bridge.git"
+  },
+  "engines": {
+    "node": "~0.10.0"
+  },
+  "keywords": [
+    "glooko",
+    "bridge",
+    "nightscout"
+  ],
+  "bugs": {
+    "url": "https://github.com/jpollock/glooko2nightscout-bridge/issues"
+  }
+}
