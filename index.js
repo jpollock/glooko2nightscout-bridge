@@ -85,12 +85,14 @@ function authorize (opts, then) {
 function fetch_query (url, opts) {
   // ?sessionID=e59c836f-5aeb-4b95-afa2-39cf2769fede&minutes=1440&maxCount=1"
   var q = {
-    lastUpdatedAt: opts.lastUpdatedAt
-  , lastGuid: Defaults.lastGuid
+    //lastUpdatedAt: opts.lastUpdatedAt
+  //, 
+    lastGuid: Defaults.lastGuid
   , sendSoftDeleted: opts.sendSoftDeleted || true
   , limit: opts.maxCount || 1000
   };
-  url += '?' + qs.stringify(q);
+  url += '?lastUpdatedAt=' + opts.lastUpdatedAt  + '&' + qs.stringify(q);
+  console.log(url);
   return url;
 }
 
@@ -117,10 +119,17 @@ function do_everything (opts, then) {
   authorize(login_opts, function (err, res, body) {
     var arr = {};
     fetch_opts.sessionID = res.headers['set-cookie'][0];
+    var d_now = Date.now();
+    var d_then = new Date(d_now - 600*60000)
+    console.log(d_then);
+    //var fetch_opts = Object.create(opts.fetch);
+    fetch_opts.lastUpdatedAt = d_then.toISOString();
+
     fetch(Defaults.LatestFoods, fetch_opts, function (err, res, foods) {
       fetch(Defaults.LatestInsulins, fetch_opts, function (err, res, insulins) {
         arr['foods'] = foods;
         arr['insulins'] = insulins;
+        console.log("Foods: " + foods.length + " Insulins:" + insulins.length);
         then(err, arr);  
       });
     });
@@ -138,51 +147,54 @@ function generate_nightscout_treatments(entries, then) {
   var insulins = entries['insulins']['insulins'];
   
   var treatments = []
-  foods.forEach(function(element) {
-    var treatment = {};
+  if (foods) {
+    foods.forEach(function(element) {
+      var treatment = {};
 
-    //console.log(element);
-    var f_date = new Date(element.timestamp);
-    var f_s_date = new Date(f_date.getTime() - 30*60000);
-    var f_e_date = new Date(f_date.getTime() + 30*60000);
+      //console.log(element);
+      var f_date = new Date(element.timestamp);
+      var f_s_date = new Date(f_date.getTime() - 30*60000);
+      var f_e_date = new Date(f_date.getTime() + 30*60000);
 
-    var now = moment(f_date); //todays date
-    var end = moment(f_s_date); // another date
-    var duration = moment.duration(now.diff(end));
-    var minutes = duration.asMinutes();
+      var now = moment(f_date); //todays date
+      var end = moment(f_s_date); // another date
+      var duration = moment.duration(now.diff(end));
+      var minutes = duration.asMinutes();
 
-    var i_date = new Date();
-    var result = insulins.filter(function(el) {
-        i_date = new Date(el.timestamp);
-        var i_moment = moment(i_date);
-        var duration = moment.duration(now.diff(i_moment));
-        var minutes = duration.asMinutes();
-        return Math.abs(minutes) < 46;
+      var i_date = new Date();
+      var result = insulins.filter(function(el) {
+          i_date = new Date(el.timestamp);
+          var i_moment = moment(i_date);
+          var duration = moment.duration(now.diff(i_moment));
+          var minutes = duration.asMinutes();
+          return Math.abs(minutes) < 46;
 
-    })
-    
-
-    insulin = result[0];
-    if (insulin != undefined) {
-      var i_date = moment(insulin.timestamp);
-      treatment.eventType = 'Meal Bolus';
-      treatment.eventTime = new Date(i_date + 420*60000).toISOString( );
-      treatment.insulin = insulin.value;
+      })
       
 
-      treatment.preBolus = moment.duration(moment(f_date).diff(moment(i_date))).asMinutes();
-    } else {
-      treatment.eventType = 'Carb Correction';
-      treatment.eventTitme = new Date(f_date + 420*60000).toISOString( );
-    }
+      insulin = result[0];
+      if (insulin != undefined) {
+        var i_date = moment(insulin.timestamp);
+        treatment.eventType = 'Meal Bolus';
+        treatment.eventTime = new Date(i_date + 420*60000).toISOString( );
+        treatment.insulin = insulin.value;
+        
 
-    treatment.carbs = element.carbs;
-    treatment.notes = JSON.stringify(element);
-    
-    treatments.push(treatment);
+        treatment.preBolus = moment.duration(moment(f_date).diff(moment(i_date))).asMinutes();
+      } else {
+        treatment.eventType = 'Carb Correction';
+        treatment.eventTitme = new Date(f_date + 420*60000).toISOString( );
+      }
+
+      treatment.carbs = element.carbs;
+      treatment.notes = JSON.stringify(element);
+      
+      treatments.push(treatment);
 
 
-  });
+    });    
+  }
+
   then(err, treatments);
 }
 
