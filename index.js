@@ -88,7 +88,7 @@ function fetch_query (url, opts) {
     //lastUpdatedAt: opts.lastUpdatedAt
   //, 
     lastGuid: Defaults.lastGuid
-  , sendSoftDeleted: opts.sendSoftDeleted || true
+  , sendSoftDeleted: opts.sendSoftDeleted || false
   , limit: opts.maxCount || 1000
   };
   url += '?lastUpdatedAt=' + opts.lastUpdatedAt  + '&' + qs.stringify(q);
@@ -143,7 +143,6 @@ function generate_nightscout_treatments(entries, then) {
       // BG Check
       // Correction Bolus
       // Carb Correction  
-  console.log(entries);
   var foods = entries['foods']['foods']; //ugh
   var insulins = entries['insulins']['insulins'];
   
@@ -273,7 +272,12 @@ function engine (opts) {
     if (entries) {
       generate_nightscout_treatments(entries, function(err, treatments) {
         //var entries = glucose.map(dex_to_entry);
-        //console.log(ns_config);
+        console.log('TREATMENTS='+treatments);
+        console.log(opts.callback);
+        if (opts && opts.callback && opts.callback.call) {
+          opts.callback(null, treatments);
+        }
+        
         if (ns_config.endpoint) {
           ns_config.treatments = treatments;
           // Send data to Nightscout.
