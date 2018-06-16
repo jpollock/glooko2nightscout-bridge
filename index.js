@@ -154,8 +154,8 @@ function generate_nightscout_treatments(entries, then) {
 
       //console.log(element);
       var f_date = new Date(element.timestamp);
-      var f_s_date = new Date(f_date.getTime() - 30*60000);
-      var f_e_date = new Date(f_date.getTime() + 30*60000);
+      var f_s_date = new Date(f_date.getTime() - 45*60000);
+      var f_e_date = new Date(f_date.getTime() + 45*60000);
 
       var now = moment(f_date); //todays date
       var end = moment(f_s_date); // another date
@@ -231,7 +231,7 @@ function engine (opts) {
       fetch_opts.sessionID = my.sessionID;
       
       var now = Date.now();
-      var then = new Date(now - 180*60000)
+      var then = new Date(now - 600*60000)
       console.log(then);
       //var fetch_opts = Object.create(opts.fetch);
       fetch_opts.lastUpdatedAt = then.toISOString();
