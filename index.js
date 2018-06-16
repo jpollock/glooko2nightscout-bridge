@@ -143,6 +143,7 @@ function generate_nightscout_treatments(entries, then) {
       // BG Check
       // Correction Bolus
       // Carb Correction  
+  console.log(entries);
   var foods = entries['foods']['foods']; //ugh
   var insulins = entries['insulins']['insulins'];
   
@@ -240,6 +241,7 @@ function engine (opts) {
         fetch(Defaults.LatestInsulins, fetch_opts, function (err, res, insulins) {
           arr['foods'] = foods;
           arr['insulins'] = insulins;
+          console.log(arr);
           to_nightscout(arr);
         });
       });
@@ -276,7 +278,7 @@ function engine (opts) {
           ns_config.treatments = treatments;
           // Send data to Nightscout.
          report_to_nightscout(ns_config, function (err, response, body) {
-            console.log("Nightscout upload", 'error', err, 'status', response.statusCode, body);
+            console.log("Nightscout Glooko upload", 'error', err, 'status', response.statusCode, body);
 
           });
         }
