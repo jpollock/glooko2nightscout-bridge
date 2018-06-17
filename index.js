@@ -121,7 +121,7 @@ function do_everything (opts, then) {
     fetch_opts.sessionID = res.headers['set-cookie'][0];
     var d_now = Date.now();
     var d_then = new Date(d_now - 600*60000)
-    console.log(d_then);
+    //console.log(d_then);
     //var fetch_opts = Object.create(opts.fetch);
     fetch_opts.lastUpdatedAt = d_then.toISOString();
 
@@ -147,6 +147,7 @@ function generate_nightscout_treatments(entries, then) {
   var insulins = entries['insulins']['insulins'];
   
   var treatments = []
+  
   if (foods) {
     foods.forEach(function(element) {
       var treatment = {};
@@ -221,16 +222,17 @@ function generate_nightscout_treatments(entries, then) {
           return Math.abs(minutes) < 46;
 
       })
-      
-      if (result[0] === undefined) {
+      //console.log(result);
+      if (result[0] == undefined) {
         var f_date = moment(element.timestamp);
         treatment.eventType = 'Correction Bolus';
         treatment.eventTime = new Date(f_date + 420*60000).toISOString( );
         treatment.insulin = element.value;
         //treatment.eventTime = f_date.toISOString( );
+        treatments.push(treatment);
       }
 
-      treatments.push(treatment);
+      
 
 
     });    
@@ -281,7 +283,7 @@ function engine (opts) {
         fetch(Defaults.LatestInsulins, fetch_opts, function (err, res, insulins) {
           arr['foods'] = foods;
           arr['insulins'] = insulins;
-          console.log(arr);
+          //console.log(arr);
           to_nightscout(arr);
         });
       });
@@ -314,7 +316,7 @@ function engine (opts) {
       generate_nightscout_treatments(entries, function(err, treatments) {
         //var entries = glucose.map(dex_to_entry);
         console.log('TREATMENTS='+treatments);
-        console.log(opts.callback);
+        //console.log(opts.callback);
         if (opts && opts.callback && opts.callback.call) {
           opts.callback(null, treatments);
         }
@@ -421,10 +423,10 @@ if (!module.parent) {
               ns_config.treatments = treatments;
               console.log(treatments);
               // Send data to Nightscout.
-             report_to_nightscout(ns_config, function (err, response, body) {
+             /*report_to_nightscout(ns_config, function (err, response, body) {
                 console.log("Nightscout upload", 'error', err, 'status', response.statusCode, body);
 
-              });
+              });*/
             }
           });
         }
