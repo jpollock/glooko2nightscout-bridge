@@ -177,7 +177,8 @@ function generate_nightscout_treatments(entries, then) {
       if (insulin != undefined) {
         var i_date = moment(insulin.timestamp);
         treatment.eventType = 'Meal Bolus';
-        treatment.eventTime = new Date(i_date + 420*60000).toISOString( );
+        //treatment.eventTime = new Date(i_date + 420*60000).toISOString( );
+        treatment.eventTime = new Date(i_date).toISOString( );
         //treatment.eventTime = i_date.toISOString( );
         treatment.insulin = insulin.value;
         
@@ -186,7 +187,8 @@ function generate_nightscout_treatments(entries, then) {
       } else {
         var f_date = moment(element.timestamp);
         treatment.eventType = 'Carb Correction';
-        treatment.eventTime = new Date(f_date + 420*60000).toISOString( );
+        //treatment.eventTime = new Date(f_date + 420*60000).toISOString( );
+        treatment.eventTime = new Date(f_date).toISOString( );
         //treatment.eventTime = f_date.toISOString( );
       }
 
