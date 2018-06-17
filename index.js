@@ -176,21 +176,60 @@ function generate_nightscout_treatments(entries, then) {
       if (insulin != undefined) {
         var i_date = moment(insulin.timestamp);
         treatment.eventType = 'Meal Bolus';
-        //treatment.eventTime = new Date(i_date + 420*60000).toISOString( );
-        treatment.eventTime = i_date.toISOString( );
+        treatment.eventTime = new Date(i_date + 420*60000).toISOString( );
+        //treatment.eventTime = i_date.toISOString( );
         treatment.insulin = insulin.value;
         
 
         treatment.preBolus = moment.duration(moment(f_date).diff(moment(i_date))).asMinutes();
       } else {
+        var f_date = moment(element.timestamp);
         treatment.eventType = 'Carb Correction';
-        //treatment.eventTime = new Date(f_date + 420*60000).toISOString( );
-        treatment.eventTime = f_date.toISOString( );
+        treatment.eventTime = new Date(f_date + 420*60000).toISOString( );
+        //treatment.eventTime = f_date.toISOString( );
       }
 
       treatment.carbs = element.carbs;
       treatment.notes = JSON.stringify(element);
       
+      treatments.push(treatment);
+
+
+    });    
+  }
+
+  if (insulins) {
+    insulins.forEach(function(element) {
+      var treatment = {};
+
+      //console.log(element);
+      var f_date = new Date(element.timestamp);
+      var f_s_date = new Date(f_date.getTime() - 45*60000);
+      var f_e_date = new Date(f_date.getTime() + 45*60000);
+
+      var now = moment(f_date); //todays date
+      var end = moment(f_s_date); // another date
+      var duration = moment.duration(now.diff(end));
+      var minutes = duration.asMinutes();
+
+      var i_date = new Date();
+      var result = foods.filter(function(el) {
+          i_date = new Date(el.timestamp);
+          var i_moment = moment(i_date);
+          var duration = moment.duration(now.diff(i_moment));
+          var minutes = duration.asMinutes();
+          return Math.abs(minutes) < 46;
+
+      })
+      
+      if (result[0] === undefined) {
+        var f_date = moment(element.timestamp);
+        treatment.eventType = 'Correction Bolus';
+        treatment.eventTime = new Date(f_date + 420*60000).toISOString( );
+        treatment.insulin = element.value;
+        //treatment.eventTime = f_date.toISOString( );
+      }
+
       treatments.push(treatment);
 
 
@@ -380,6 +419,7 @@ if (!module.parent) {
             //console.log(ns_config);
             if (ns_config.endpoint) {
               ns_config.treatments = treatments;
+              console.log(treatments);
               // Send data to Nightscout.
              report_to_nightscout(ns_config, function (err, response, body) {
                 console.log("Nightscout upload", 'error', err, 'status', response.statusCode, body);
